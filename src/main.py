@@ -1,10 +1,15 @@
 from discord.ext import commands
 import discord
+
 import os
+import random
+import urllib.request
+import json
 
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
+intents.presences = True
 bot = commands.Bot(
     command_prefix="!",  # Change to desired prefix
     case_insensitive=True, # Commands aren't case-sensitive
@@ -33,7 +38,6 @@ async def name(ctx):
 # `d6` command answers with a value between 1 and 6
 @bot.command()
 async def d6(ctx):
-    import random
     await ctx.send(random.randint(1, 6))
 
 # Message `Salut tout le monde` should be responded with `Salut tout seul` and ping author
@@ -91,6 +95,39 @@ async def count(ctx):
 :ghost: **{offline}** members are offline.
     """
     await ctx.send(message)
+
+####### Fun and games commands -------------------------------------------------
+
+# The `!xkcd` command should post a random comic from https://xkcd.com/
+@bot.command()
+async def xkcd(ctx):
+    # Get the latest comic number
+    contents = urllib.request.urlopen("https://xkcd.com/info.0.json").read()
+    data = json.loads(contents)
+    latest = data["num"]
+
+    # Get a random comic
+    random_comic = random.randint(1, latest)
+    contents = urllib.request.urlopen(f"https://xkcd.com/{random_comic}/info.0.json").read()
+    data = json.loads(contents)
+
+    comic_image_url = data["img"]
+    description = data["alt"]
+
+    # Create a beautiful response
+    embed = discord.Embed(title=f"XKCD #{random_comic}", description=description)
+    embed.set_image(url=comic_image_url)
+    await ctx.send(embed=embed)
+
+# The `!poll <question>` command should post a question and wait for reactions
+@bot.command()
+async def poll(ctx, question):
+    # embed = discord.Embed(title=":bar_chart: Poll", description=question)
+    # embed.set_footer(text=f"Poll created by {ctx.author.name}")
+    await ctx.send("@here\n:bar_chart: Poll Time!\n" + question)
+    message = await ctx.send(question + "\nReact to vote!")
+    await message.add_reaction("👍")
+    await message.add_reaction("👎")
 
 token = os.environ.get("DISCORD_TOKEN") # Get the token from the environment variable
 bot.run(token)  # Starts the bot
