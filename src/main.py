@@ -1,5 +1,6 @@
 from discord.ext import commands
 import discord
+import asyncio
 
 import os
 import random
@@ -71,29 +72,21 @@ async def ban(ctx, member: discord.Member):
     await member.ban()
     await ctx.send(f"{member.name} has been banned from the server.")
 
-# The `!count` command should count the number of members in the server based on their status
+# The `!count` command should sort the members in the server based on their status
 @bot.command()
 async def count(ctx):
-    online = 0
-    offline = 0
-    idle = 0
-    dnd = 0
-    for member in ctx.guild.members:
-        if member.status == discord.Status.online:
-            online += 1
-        elif member.status == discord.Status.offline:
-            offline += 1
-        elif member.status == discord.Status.idle:
-            idle += 1
-        elif member.status == discord.Status.dnd:
-            dnd += 1
+    online = [member.name for member in ctx.guild.members if member.status == discord.Status.online]
+    offline = [member.name for member in ctx.guild.members if member.status == discord.Status.offline]
+    idle = [member.name for member in ctx.guild.members if member.status == discord.Status.idle]
+    dnd = [member.name for member in ctx.guild.members if member.status == discord.Status.dnd]
 
     message = f"""
-:bulb: **{online}** members are online,
-:zzz: **{idle}** members are idle,
-:no_entry: **{dnd}** members are in Do Not Disturb,
-:ghost: **{offline}** members are offline.
+:bulb: **{len(online)} members are online:** {', '.join(online)}
+:zzz: **{len(idle)} members are idle:** {', '.join(idle)}
+:no_entry: **{len(dnd)} members are in Do Not Disturb:** {', '.join(dnd)}
+:ghost: **{len(offline)} members are offline:** {', '.join(offline)}
     """
+
     await ctx.send(message)
 
 ####### Fun and games commands -------------------------------------------------
@@ -120,14 +113,28 @@ async def xkcd(ctx):
     await ctx.send(embed=embed)
 
 # The `!poll <question>` command should post a question and wait for reactions
+# during 60 seconds, then delete the question and post results
 @bot.command()
 async def poll(ctx, question):
-    # embed = discord.Embed(title=":bar_chart: Poll", description=question)
-    # embed.set_footer(text=f"Poll created by {ctx.author.name}")
-    await ctx.send("@here\n:bar_chart: Poll Time!\n" + question)
-    message = await ctx.send(question + "\nReact to vote!")
+    main_message = await ctx.send("@here\n:bar_chart: Poll Time!\n" + question)
+    message = await ctx.send(question + "\n\nReact to vote! (60 seconds) :alarm_clock:")
     await message.add_reaction("👍")
     await message.add_reaction("👎")
+
+    await asyncio.sleep(60)
+
+    # This is needed to refresh the Message object and thus obtain correct number of reactions
+    cache_msg = discord.utils.get(bot.cached_messages, id=message.id)
+
+    for reaction in cache_msg.reactions:
+        if reaction.emoji == "👍":
+            positive = reaction.count - 1
+        elif reaction.emoji == "👎":
+            negative = reaction.count - 1
+
+    await cache_msg.delete()
+
+    await main_message.reply(f"Results: 👍 {positive} | 👎 {negative}")
 
 token = os.environ.get("DISCORD_TOKEN") # Get the token from the environment variable
 bot.run(token)  # Starts the bot
