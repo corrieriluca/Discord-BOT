@@ -43,11 +43,11 @@
 [x] When typing "Salut tout le monde" (without the command sign), the bot should say "Salut tout seul" and ping the original author of the message
 
 ### Administration
-[ ] When typing `!admin <A member nickname>`, your bot should create an Admin role (if it doesn't exists) on your server, allowing them to manage channels, kick and ban members, and give it to the member in parameter
+[x] When typing `!admin <A member nickname>`, your bot should create an Admin role (if it doesn't exists) on your server, allowing them to manage channels, kick and ban members, and give it to the member in parameter
 
-[ ] When typing `!ban <A member nickname>`, your bot should ban that member from the server (**Test with caution**)
+[x] When typing `!ban <A member nickname>`, your bot should ban that member from the server (**Test with caution**)
 
-[ ] When typing `!count` the bot should write back for each possible status (Online, Offline, Idle, Do not disturb) the number of members (including yourself) in the server with that status
+[x] When typing `!count` the bot should write back for each possible status (Online, Offline, Idle, Do not disturb) the number of members (including yourself) in the server with that status
 - Example : "3 members are online, 2 are idle and 4 are off"
 - Extra mile : Instead of counting the members, list them sorted by status
 
